@@ -53,17 +53,62 @@ events <- events %>% mutate(
 ## Part 3 - Label each question using comments
 ## -----------------------------------------------------------------------------
 
-1. In this section, you will be parsing the date and time information for the events. First, write a 
-regular expression for the `date` column that contains 3 capturing groups for matching the following 
-items:
-  
-- 1st capturing group: Month
-- 2nd capturing group: Day
-- 3rd capturing group: Year
+# Question 1
 
-Use both `str_view()` and `str_match()` to help you write your regex and visualize your matches.
+str_view(string = events$date, pattern = "(\\d+)[/](\\d+)[/](\\d+)")
+str_match(string = events$date, pattern = "(\\d+)[/](\\d+)[/](\\d+)")
 
-str_view()
+# Question 2
+
+events <- events %>% mutate(
+  event_date = str_replace(string = date, 
+                           pattern = "(\\d+)[/](\\d+)[/](\\d+)", 
+                           replacement = "20\\3-\\1-\\2")
+)
+
+# Question 3
+
+time_matches <- str_match(string = events$time, pattern = "(\\d{2}):(\\d{2})\\s([AP]M)")
+
+# Question 4
+
+events <- events %>% mutate(
+  hour = as.double(time_matches[,2]), 
+  minute = time_matches[,3],
+  ampm = time_matches[,4]
+)
+
+# Question 5
+
+events <- events %>% mutate(
+  hour24 = if_else(ampm == "PM", hour + 12, hour),
+  hour24 = if_else(hour24 == 24, 12, hour24)
+)
+
+# Question 6 
+
+events <- events %>% mutate(
+  hour24 = str_pad(string = hour24, width = 2, side = "left", pad = "0")
+)
+
+# Question 7
+
+events <- events %>% mutate(
+  event_time = str_c(hour24,":",minute,":","00"),
+  event_datetime = str_c(event_date," ",event_time)
+)
+
+# Question 8
+
+results <- events %>% select(event_datetime, event_date, event_time, event_location, event_address, 
+                             event_city, event_state, event_zip)
+
+# Question 9 
+
+9. Write your `results` object to a CSV file named `events_<your_name>.csv` 
+(fill in your name or initials). Save the file inside your `data_dir`.
+
+results %>% write_csv(file = file.path(data_dir, "clayton_becker.csv"))
 
 ## -----------------------------------------------------------------------------
 ## END SCRIPT
